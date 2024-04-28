@@ -62,6 +62,54 @@ class Agent:
         return response
 
 
+class PythonAgent():
+    """
+    A PytonAgent agent is used to solve problems by writing Python code.
+    It will provide code to execute and the imports used in the code.
+    IMPORTANT!!: Code should ALWAYS be executed in a virtual or isolated environment.
+    """
+    def __init__(self, llm:object):
+        self.llm = llm
+        self.chat_history = []
+        self.system_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "PythonAgent"))
+        self.library_extractor = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ImportExtractor"))
+
+    def ask(self, prompt, history:list=None):
+        """
+        Ask a question based on the given prompt.
+        Args:
+            prompt (str): The prompt to use for the question. Will only use system_prompt if prompt is None.
+            history (list, optional): The history of the conversation. Defaults to None.
+        Returns:
+            dict: A dictionary containing the "code" and "imports" keys.
+                "code": The code to execute. In string format. WARNING!:CODE SHOULD NEVER BE EXECUTED OUTSIDE OF A VIRTUAL OR ISOLATED ENVIRONMENT.
+                "libraries": The imports used in the code. In json list format.
+        """
+        if llm_has_ask(self.llm) is False:
+            return None
+        if history is not None:
+            self.chat_history.extend(history)
+
+        user_prompt = make_prompt("user", prompt)
+        coder_prompts = [self.system_prompt, user_prompt]
+        code_response = self.llm.ask(coder_prompts)
+        self.chat_history.append(coder_prompts[1:])
+        self.chat_history.append(make_prompt("assistant", code_response))
+
+        code = code_response.split("```")[1]
+
+        # Clean up code
+        if "Python" in code:
+            code = code.replace("Python", "")
+        
+        # Extract imports
+        imports = self.llm.ask([self.library_extractor, make_prompt("user", code_response)])
+        self.chat_history.append(make_prompt("assistant", imports))
+        imports = safe_read_json(imports)
+
+        return {"code":code, "libraries":imports}
+
+
 class DataExtractor():
     """
     A DataExtractor agent is used to extract information from given content.
