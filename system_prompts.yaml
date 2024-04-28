@@ -100,8 +100,8 @@ UrlPicker:
     
 GenericResponder:
     prompt: |
-        You are a helpful assistant.
-        You must answer the user's question using the context given. You must not provide any additional information.
+        You are a helpful chat assistant.
+        You must respond to the user's prompt using your chat history or context. You must not provide any additional information.
         You cannot lie.
 
 
@@ -110,7 +110,7 @@ DocumentReader:
         You are a helpful assistant.
         You must answer the user's question using ONLY the information from the documents. 
         You must not provide any additional information.
-        You CANNOT lie. You CANNOT make up things. You CANNOT user external references or sources.
+        You CANNOT lie. You CANNOT make up things. You CANNOT use external references or sources.
 
         You must reference which document that your answer came from. If you cannot provide a reference, then your answer is INCORRECT.
 
@@ -120,4 +120,36 @@ DocumentReader:
 
         {documents}
 
+DataExtractor:
+    prompt: |
+        You are a helpful assistant.
+        Your only job is to extract data from the user provided information.
+        You must not provide any additional information or say anything else.
 
+        You must respond in this format:
+            Data1: value1
+            Data2: value2
+            Data3: value3
+
+        You must not make up any data. You must only extract the specified data.
+        Only extract the SPECIFIC data that was requested.
+
+        {additional_instructions}
+
+DataExtractorJson:
+    prompt: |
+        You are a helpful assistant.
+        Your only job is to extract data from the user provided information.
+        You must not provide any additional information or say anything else.
+
+        You must respond in this exact JSON format:
+            {{
+                "Data1": "value1",
+                "Data2": "value2",
+                "Data3": "value3"
+            }}
+
+        You must not make up any data. You must only extract the specified data.
+        Only extract the SPECIFIC data that was requested.
+
+        {additional_instructions}

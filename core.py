@@ -20,6 +20,17 @@ class AgentType(Enum):
     GENERIC_RESPONDER = "GenericResponder"
 
 
+def llm_has_ask(llm):
+    if not hasattr(llm, "ask"):
+            warnings.warn("llm object must have an ask function! See OllamaChat class in models.py for an example.")
+            return False
+    return True
+
+
+def make_prompt(role:str, content:str):
+    return {"role": role, "content": content}
+
+
 def read_pdf(file):
     """
     Reads a pdf file and returns the complete text content.
@@ -123,7 +134,13 @@ def internet_search(query):
     Args:
         query (str): The query to search for.
     """
-    return list(search(query, tld="co.in", num=10, stop=10, pause=2))
+    urls = list(search(query, tld="co.in", num=5, stop=10, pause=2))
+    urls_detailed = []
+
+    for url in urls:
+        urls_detailed.append(fetch_url_info(url))
+
+    return urls_detailed
 
 def read_website(url):
     """
@@ -131,7 +148,8 @@ def read_website(url):
     Args:
         url (str): The url of the website to read.
     """
-    response = requests.get(url)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+    response = requests.get(url, headers=headers)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         body = soup.body        
@@ -140,3 +158,30 @@ def read_website(url):
     else:
         warnings.warn("Failed to retrieve the website")
         return None
+    
+
+def fetch_url_info(url):
+    """
+    Fetches the description and title of the website at the given url.
+    Args:
+        url (str): The url of the website to read.
+    
+    Returns:
+        dict: A dictionary containing the url, title and description of the website.
+    """
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            title = soup.find('title').text if soup.find('title') else 'No title found'
+            meta_desc = soup.find('meta', attrs={'name': 'description'})
+            description = meta_desc['content'] if meta_desc else 'No description found'
+            return {"url": url, 'title': title, 'description': description}
+        else:
+            return None
+    except Exception as e:
+        return None
+
+
+# TODO:: Add custom html reader option

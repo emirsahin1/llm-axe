@@ -9,7 +9,7 @@ class OllamaChat():
 
         self._host = host
         self._model = model
-        self._ollama = Client(host='http://localhost:11434')
+        self._ollama = Client(host)
 
 
     def ask(self, prompts:list):
