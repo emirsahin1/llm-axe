@@ -27,7 +27,7 @@ result = fc.get_function(prompt)
 ```
 No need for premade schemas, templates, prompts, or specialized functions.
 
-**See the examples folder for complete examples.**
+[**See the examples folder for more usage examples**](https://github.com/emirsahin1/llm-axe/tree/main/examples)
 
 ## Features
 
