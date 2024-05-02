@@ -200,7 +200,7 @@ class PdfReader():
         prompts.extend(question_prompts)
         response = self.llm.ask(prompts)
 
-        self.chat_history.append(question_prompts[1:]) # dont include the system prompt
+        self.chat_history.extend(question_prompts[1:]) # dont include the system prompt
         self.chat_history.append(make_prompt("assistant", response))
         return response
     
