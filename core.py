@@ -8,7 +8,7 @@ from enum import Enum
 from googlesearch import search
 import requests
 from bs4 import BeautifulSoup
-from pypdf import PdfReader
+from pypdf import PdfReader as pypdfReader
 
 class AgentType(Enum):
     """
@@ -37,7 +37,7 @@ def read_pdf(file):
     Args:
         file (str): The path to the pdf file.
     """
-    reader = PdfReader(file)
+    reader = pypdfReader(file)
     text = ""
     for page in reader.pages:
         text += page.extract_text()
