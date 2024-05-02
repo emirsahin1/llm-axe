@@ -93,7 +93,7 @@ class PythonAgent():
         user_prompt = make_prompt("user", prompt)
         coder_prompts = [self.system_prompt, user_prompt]
         code_response = self.llm.ask(coder_prompts)
-        self.chat_history.append(coder_prompts[1:])
+        self.chat_history.extend(coder_prompts[1:])
         self.chat_history.append(make_prompt("assistant", code_response))
 
         code = code_response.split("```")[1]
