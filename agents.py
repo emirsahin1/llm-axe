@@ -164,18 +164,16 @@ class PdfReader():
     A PdfReader agent is used to answer questions based on information from given PDF files.
     """
 
-    def __init__(self, llm:object=None, pdf_files:list=None, additional_system_instructions:str="", custom_system_prompt:str=None):
+    def __init__(self, llm:object=None, additional_system_instructions:str="", custom_system_prompt:str=None):
         """
         Initializes a new PdfReader.
         Args:
             llm (object): An object that implements the ask() method.
-            pdf_files (list): A list of PDF files to read. Each file should be a string representing the path to the PDF file.
             additional_system_instructions (str, optional): Additional instructions to include in the system prompt.
             custom_system_prompt (str, optional): Custom system prompt. Defaults to None.
         """
         self.chat_history = []
         self.llm = llm
-        self.pdf_files = pdf_files
         self.additional_instructions = additional_system_instructions
         self.system_prompt = get_yaml_prompt("system_prompts.yaml", "DocumentReader")
         self.custom_system_prompt = custom_system_prompt
