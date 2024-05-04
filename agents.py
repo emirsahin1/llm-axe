@@ -103,7 +103,7 @@ class PythonAgent():
             code = code.replace("Python", "")
         
         # Extract imports
-        imports = self.llm.ask([self.library_extractor, make_prompt("user", code_response)])
+        imports = self.llm.ask([self.library_extractor, make_prompt("user", code_response)], format="json")
         self.chat_history.append(make_prompt("assistant", imports))
         imports = safe_read_json(imports)
 
@@ -291,7 +291,7 @@ class FunctionCaller():
         question_prompts = self.get_prompt(question)
         prompts.extend(question_prompts)
 
-        response = self.llm.ask(prompts)
+        response = self.llm.ask(prompts, format="json")
         response_json = safe_read_json(response)
 
         self.chat_history.extend(question_prompts[1:])
@@ -391,7 +391,7 @@ class OnlineAgent:
         url_picker_prompt = make_prompt("system", url_picker_prompt.format(question=prompt, urls=search_results))
         url_picker_prompts.append(url_picker_prompt)
 
-        resp = self.llm.ask(url_picker_prompts)
+        resp = self.llm.ask(url_picker_prompts, format="json")
         resp_json = safe_read_json(resp)
         self.chat_history.extend(url_picker_prompts[1:])
         self.chat_history.append(make_prompt("assistant", resp))
@@ -428,7 +428,7 @@ class OnlineAgent:
     def get_search_query(self, question):
         user_prompt = make_prompt("user", question)
         prompts = [self.system_prompt, user_prompt]
-        response = self.llm.ask(prompts)
+        response = self.llm.ask(prompts, format="json")
         response_json = safe_read_json(response)
         self.chat_history.extend(prompts[1:])
         self.chat_history.append(make_prompt("assistant", response))
