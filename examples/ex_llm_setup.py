@@ -7,7 +7,8 @@ class MyCustomLLM():
     # Your ask function will always receive a list of prompts
     # The prompts are in open ai prompt format
     #  example: {"role": "system", "content": "You are a helpful assistant."}
-    def ask(self, prompts:list):
+    # If your model supports json format, use the format parameter to specify that to your model.
+    def ask(self, prompts:list, format:str=""):
         return "Your llms response to the prompts goes here!"        
 
 # example usage:
