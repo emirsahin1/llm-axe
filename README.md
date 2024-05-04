@@ -15,6 +15,7 @@ pip install llm-axe
 ```
     
 ## Example Snippets
+- **Online Chat Demo**: [Demo chat app showcasing an LLM with internet access](https://github.com/emirsahin1/llm-axe/tree/main/examples/ex_online_chat_demo.py)
 
 - **Function Calling**
 
