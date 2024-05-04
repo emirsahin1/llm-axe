@@ -1,3 +1,17 @@
+# Example Conversation Output:
+
+# User: Who are you?
+# AI: I am a helpful chat assistant.
+
+# User: Great. Can you find me a website that I can use to practice web scraping?
+
+# AI: Based on information from the internet, one such website is https://www.scrapethissite.com/pages/. 
+# This website provides various examples of pages for practicing web scraping, including country lists, hockey team stats, Oscar-winning films, and more. These examples cover different types of interfaces, such as forms, searching, pagination, AJAX, JavaScript, frames, and iFrames, making it a great resource to practice your web scraping skills.    
+
+# User: Thanks!
+# AI: You're welcome!
+
+
 # This is an example chat session through the terminal
 # The AI will use the internet if it is required, otherwise, it will use its own knowledge base
 
