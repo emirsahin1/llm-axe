@@ -12,6 +12,6 @@ class OllamaChat():
         self._ollama = Client(host)
 
 
-    def ask(self, prompts:list):
-        return self._ollama.chat(model=self._model, messages=prompts)["message"]["content"]        
+    def ask(self, prompts:list, format:str=""):
+        return self._ollama.chat(model=self._model, messages=prompts, format=format)["message"]["content"]        
 
