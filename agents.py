@@ -114,7 +114,7 @@ class DataExtractor():
     """
     A DataExtractor agent is used to extract information from given content.
     """
-    def __init__(self, llm:object=None, reply_as_json:bool=False, additional_system_instructions:str=""):
+    def __init__(self, llm:object, reply_as_json:bool=False, additional_system_instructions:str=""):
         """
         Initializes a new DataExtractor.
         Args:
@@ -164,7 +164,7 @@ class PdfReader():
     A PdfReader agent is used to answer questions based on information from given PDF files.
     """
 
-    def __init__(self, llm:object=None, additional_system_instructions:str="", custom_system_prompt:str=None):
+    def __init__(self, llm:object, additional_system_instructions:str="", custom_system_prompt:str=None):
         """
         Initializes a new PdfReader.
         Args:
@@ -179,7 +179,7 @@ class PdfReader():
         self.custom_system_prompt = custom_system_prompt
 
 
-    def ask(self, question:str, pdf_files:list=None, history:list=None):
+    def ask(self, question:str, pdf_files:list, history:list=None):
         """
         Ask a question based on the given PDF files.
         Args:
@@ -235,7 +235,7 @@ class FunctionCaller():
     have type annotations doc string descriptions.
     """
 
-    def __init__(self, llm:object=None, functions:list=None, additional_system_instructions:str="", custom_system_prompt:str=None):            
+    def __init__(self, llm:object, functions:list, additional_system_instructions:str="", custom_system_prompt:str=None):            
         """
         Initializes a new Function Caller.
 
