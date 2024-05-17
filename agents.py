@@ -53,11 +53,10 @@ class Agent:
         if history is not None:
             prompts.extend(history)
 
-        if prompt is not None:
-            prompts.append(make_prompt("user", prompt))
-            self.chat_history.extend(prompts[1:])
-    
+        prompts.append(make_prompt("user", prompt))
         response = self.llm.ask(prompts)
+    
+        self.chat_history.append(prompts[-1])
         self.chat_history.append(make_prompt("assistant", response))
         return response
 
@@ -72,7 +71,7 @@ class PythonAgent():
         self.llm = llm
         self.chat_history = []
         self.system_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "PythonAgent"))
-        self.library_extractor = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ImportExtractor"))
+        self.library_extractor_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ImportExtractor"))
 
     def ask(self, prompt, history:list=None):
         """
@@ -87,13 +86,17 @@ class PythonAgent():
         """
         if llm_has_ask(self.llm) is False:
             return None
+        
+        coder_prompts = []
+        coder_prompts.append(self.system_prompt)
         if history is not None:
-            self.chat_history.extend(history)
+            coder_prompts.extend(history)
 
         user_prompt = make_prompt("user", prompt)
-        coder_prompts = [self.system_prompt, user_prompt]
+        coder_prompts.append(user_prompt)
+            
         code_response = self.llm.ask(coder_prompts)
-        self.chat_history.extend(coder_prompts[1:])
+        self.chat_history.append(user_prompt)
         self.chat_history.append(make_prompt("assistant", code_response))
 
         code = code_response.split("```")[1]
@@ -103,7 +106,7 @@ class PythonAgent():
             code = code.replace("Python", "")
         
         # Extract imports
-        imports = self.llm.ask([self.library_extractor, make_prompt("user", code_response)], format="json")
+        imports = self.llm.ask([self.library_extractor_prompt, make_prompt("user", code_response)], format="json")
         self.chat_history.append(make_prompt("assistant", imports))
         imports = safe_read_json(imports)
 
@@ -154,7 +157,7 @@ class DataExtractor():
         """
         prompts = self.get_prompt(info, data_points)
         resp = self.llm.ask(self.get_prompt(info, data_points))
-        self.chat_history.extend(prompts[1:])
+        self.chat_history.append(prompts[1])
         self.chat_history.append(make_prompt("assistant", resp))
         return resp
     
@@ -191,14 +194,16 @@ class PdfReader():
             raise ValueError("No LLM object provided.")
             
         prompts = []
+        question_prompts = self.get_prompt(question, pdf_files)
+        prompts.append(question_prompts[0])
+
         if history is not None:
             prompts.extend(history)
 
-        question_prompts = self.get_prompt(question, pdf_files)
-        prompts.extend(question_prompts)
+        prompts.append(question_prompts[1])
         response = self.llm.ask(prompts)
 
-        self.chat_history.extend(question_prompts[1:]) # dont include the system prompt
+        self.chat_history.append(question_prompts[1]) # dont include the system prompt
         self.chat_history.append(make_prompt("assistant", response))
         return response
     
@@ -285,16 +290,17 @@ class FunctionCaller():
             return None
         
         prompts = []
+        question_prompts = self.get_prompt(question)
+        prompts.append(question_prompts[0])
+
         if history is not None:
             prompts.extend(history)
-
-        question_prompts = self.get_prompt(question)
-        prompts.extend(question_prompts)
+        prompts.append(question_prompts[1])            
 
         response = self.llm.ask(prompts, format="json")
         response_json = safe_read_json(response)
 
-        self.chat_history.extend(question_prompts[1:])
+        self.chat_history.append(question_prompts[1])
         self.chat_history.append(make_prompt("assistant", response))
 
         if response_json is None:
@@ -339,6 +345,59 @@ class FunctionCaller():
         prompts = [self.system_prompt, user_prompt]
         return prompts
 
+
+class WebsiteReaderAgent:
+    """
+    An agent that can will read a website and answer questions based on it.
+    """
+
+    def __init__(self, llm:object, additional_system_instructions:str="", custom_site_reader:callable=None):
+        """
+        Args:
+            llm (object): An LLM object. Must have an ask method.
+            url (str): The url of the website to read.
+            additional_system_instructions (str, optional): Instructions in addition to the system prompt. Defaults to "".
+            custom_site_reader (function, optional): A custom online site reader function. The site reader function must take a URL and return a string representation of the site.
+        """
+        self.llm = llm
+        self.chat_history = []
+        self.system_prompt = get_yaml_prompt("system_prompts.yaml", "WebsiteReader")
+        self.additional_system_instructions = additional_system_instructions
+        self.read_function = custom_site_reader if custom_site_reader else read_website
+
+    def ask(self, question:str, url:str, history:list=None):
+        """
+        Answers the question based on the provided website.
+        
+        Args:
+            question (str): The question to answer.
+            url (str): The url of the website to read.
+            history (list, optional): The history of the conversation. Defaults to None. Added before question.
+        """
+        if llm_has_ask(self.llm) is False:
+            return None
+
+        website_content = read_website(url)
+        
+        if website_content is None:
+            website_content = "Website could not be read"
+
+        syst_prompt = get_yaml_prompt("system_prompts.yaml", "WebsiteReader")
+        syst_prompt = make_prompt("system", self.system_prompt.format(url=url, additional_instructions=self.additional_system_instructions, content=website_content))
+
+        prompts = []
+        prompts.append(syst_prompt)
+        if history is not None:
+            prompts.extend(history)
+
+        user_prompt = make_prompt("user", question)
+        prompts.append(user_prompt)
+        
+        response = self.llm.ask(prompts)
+        self.chat_history.append(user_prompt)
+        self.chat_history.append(make_prompt("assistant", response))
+        return response
+    
 
 class OnlineAgent:
     """
@@ -387,13 +446,15 @@ class OnlineAgent:
         if history is not None:
             url_picker_prompts.extend(history)
 
+        # Use system prompt as user, since we have chat history
         url_picker_prompt = get_yaml_prompt("system_prompts.yaml", "UrlPicker")
-        url_picker_prompt = make_prompt("system", url_picker_prompt.format(question=prompt, urls=search_results))
+        url_picker_prompt = make_prompt("user", url_picker_prompt.format(question=prompt, urls=search_results))
         url_picker_prompts.append(url_picker_prompt)
 
         resp = self.llm.ask(url_picker_prompts, format="json")
         resp_json = safe_read_json(resp)
-        self.chat_history.extend(url_picker_prompts[1:])
+
+        self.chat_history.append(url_picker_prompt)
         self.chat_history.append(make_prompt("assistant", resp))
 
         # Check if the response is a valid url
@@ -430,7 +491,7 @@ class OnlineAgent:
         prompts = [self.system_prompt, user_prompt]
         response = self.llm.ask(prompts, format="json")
         response_json = safe_read_json(response)
-        self.chat_history.extend(prompts[1:])
+        self.chat_history.append(prompts[1])
         self.chat_history.append(make_prompt("assistant", response))
         if response_json is not None and "search_query" in response_json:
             return response_json["search_query"]

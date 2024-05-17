@@ -18,6 +18,7 @@ class AgentType(Enum):
     PLANNER = "Planner"
     SUMMARIZER = "Summarizer"
     GENERIC_RESPONDER = "GenericResponder"
+    VALIDATOR = "Validator"
 
 
 def llm_has_ask(llm):
@@ -54,7 +55,10 @@ def get_yaml_prompt(yaml_file_name:str, prompt_name:str):
     """
     dir_of_file = os.path.dirname(os.path.realpath(__file__))
     yaml_path = os.path.join(dir_of_file, yaml_file_name)
-    return yaml.safe_load(open(yaml_path))[prompt_name]["prompt"]
+    file = open(yaml_path)
+    loaded = yaml.safe_load(file)[prompt_name]["prompt"]
+    file.close()
+    return loaded
 
 
 def generate_schema(functions):
@@ -144,7 +148,7 @@ def internet_search(query):
 
 def read_website(url):
     """
-    Reads the body of the website at the given url.
+    Reads and returns the body of the website at the given url.
     Args:
         url (str): The url of the website to read.
     """

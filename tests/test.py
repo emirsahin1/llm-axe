@@ -28,14 +28,12 @@ class TestAgent(unittest.TestCase):
     
         agent = Agent(self.llm_mock, agent_type=AgentType.GENERIC_RESPONDER)
         response = agent.ask(prompt, history=[{"role": "user", "content": "Hello"}])
-        
+        print(agent.chat_history[0])
         self.assertEqual(response, mock_resp)
         self.assertEqual(agent.chat_history[0]["role"], "user")
-        self.assertEqual(agent.chat_history[0]["content"], "Hello")
-
-        self.assertEqual(agent.chat_history[1]["role"], "user")
-        self.assertEqual(agent.chat_history[2]["role"], "assistant")
-        self.assertEqual(agent.chat_history[2]["content"], mock_resp)
+        self.assertEqual(agent.chat_history[0]["content"], "What is the meaning of life?")
+        self.assertEqual(agent.chat_history[1]["role"], "assistant")
+        self.assertEqual(agent.chat_history[1]["content"], mock_resp)
 
     def test_get_prompt(self):
         prompt = "What is the meaning of life?"
@@ -169,9 +167,10 @@ class TestOnlineAgent(unittest.TestCase):
                     response = agent.search(prompt)
 
                     self.assertEqual(response, mock_resp)
-                    self.assertEqual(agent.chat_history[0]["role"], "assistant")
-                    self.assertEqual(agent.chat_history[1]["role"], "user")
-                    self.assertEqual(agent.chat_history[2]["role"], "assistant")
+                    self.assertEqual(agent.chat_history[0]["role"], "user")
+                    self.assertEqual(agent.chat_history[1]["role"], "assistant")
+                    self.assertEqual(agent.chat_history[2]["role"], "user")
+                    self.assertEqual(agent.chat_history[3]["role"], "assistant")
 
 
 if __name__ == '__main__':
