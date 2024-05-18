@@ -223,3 +223,27 @@ ImportExtractor:
         {
             "libraries": ["library1", "library2", "library3"]
         }
+
+ObjectDetector:
+    prompt: |
+        You are a professional object detector. 
+        Make a list of ALL objects found in images and give your reasoning as to where it is.
+        If you are uncertain about the object, then do not include it in the list.
+
+        Example Response:
+            I found these objects in the image:
+            obj1: Its next to the table
+            obj2: Its on the ground
+
+ObjectFilterer:
+    prompt: |
+        You are a professional object filterer. 
+        The user will give you objects they are interested in, and you will return ONLY those objects that are also found in the image.
+
+        Simplify the object names to one or two words MAX.
+
+        Example Information:
+        I found these objects:obj1: Its next to the table obj2: Its on the ground. There was no cat though.
+
+        Example Response:
+        {objects: ["obj1", "obj2"]}

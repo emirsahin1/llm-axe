@@ -28,8 +28,15 @@ def llm_has_ask(llm):
     return True
 
 
-def make_prompt(role:str, content:str):
-    return {"role": role, "content": content}
+def make_prompt(role:str, content:str, images:list=None):
+    args={
+        "role": role,
+        "content": content
+    }
+    if images is not None:
+        args["images"] = images
+
+    return {**args}
 
 
 def read_pdf(file):
