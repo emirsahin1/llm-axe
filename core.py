@@ -29,6 +29,15 @@ def llm_has_ask(llm):
 
 
 def make_prompt(role:str, content:str, images:list=None):
+    """
+    Creates a prompt in OpenAI format
+    Args:
+        role (str): The role of the prompt
+        content (str): The content of the prompt
+        images (list, optional): A list of images to include in the prompt. Defaults to None.
+    Returns:
+        dict: The prompt in OpenAI format
+    """
     args={
         "role": role,
         "content": content

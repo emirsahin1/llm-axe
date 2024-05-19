@@ -227,23 +227,41 @@ ImportExtractor:
 ObjectDetector:
     prompt: |
         You are a professional object detector. 
-        Make a list of ALL objects found in images and give your reasoning as to where it is.
+        Make a list of ALL objects found in the image and give a brief description of each object which includes its location and features.
         If you are uncertain about the object, then do not include it in the list.
 
-        Example Response:
+        Example Response Format:
             I found these objects in the image:
-            obj1: Its next to the table
-            obj2: Its on the ground
+            Radio: Its next to the table, it is orange and seems damaged.
+            Toy: Its on the ground. Its brown and seems to be made of wood.
+
+        Your response must match that format.
 
 ObjectFilterer:
     prompt: |
-        You are a professional object filterer. 
-        The user will give you objects they are interested in, and you will return ONLY those objects that are also found in the image.
+        You must filter out any objects that do not match the user's interests.
 
         Simplify the object names to one or two words MAX.
+        Your response format is JSON.
 
-        Example Information:
-        I found these objects:obj1: Its next to the table obj2: Its on the ground. There was no cat though.
+        Example Response Format:
+        {
+            "objects": [
+                {
+                "label": "Radio",
+                "location": "Its next to the table",
+                "description": "Its orange"
+                },
+                {
+                "label": "Toy",
+                "location": "Its on the ground",
+                "description": "No information"
+                }
+            ]
+        }
 
-        Example Response:
-        {objects: ["obj1", "obj2"]}
+        Response MUST have label, location, and description.
+        Get the description from the user's image information.
+
+        ONLY KEEP THE SPECIFIC OBJECTS THAT MATCH THE USER'S INTERESTS.
+        If there are no matching objects, then RETURN an EMPTY list.

@@ -9,13 +9,14 @@ class Agent:
     """
     Basic agent that can use premade or custom system prompts.
     """
-    def __init__(self, llm:object, agent_type:AgentType=None, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8):
+    def __init__(self, llm:object, agent_type:AgentType=None, additional_system_instructions:str="", custom_system_prompt:str=None, format:str="", temperature:float=0.8):
         """
         Args:
             llm (object): An LLM object with an ask function.
             agent_type (AgentType, optional): The type of agent to use. Choose from AgentType enum. Defaults to None.
-            additional_system_instructions (str, optional): Additional system instructions to include in the system prompt. Defaults to "".
-            custom_system_prompt (any, optional): An optional string to override and use as the custom system prompt.
+            additional_system_instructions (str, optional): Additional system instructions to include in the premade system prompt. Defaults to "".
+            custom_system_prompt (any, optional): An optional string to totally override and use as the custom system prompt.
+            format (str, optional): The format of the response. Use "json" for json. Defaults to "".
             temperature (float, optional): The temperature of the LLM. Defaults to 0.8.
         """
         self.llm = llm
@@ -30,6 +31,7 @@ class Agent:
         
         self.system_prompt = make_prompt("system", self.system_prompt.format(additional_instructions=additional_system_instructions))
         self.temperature = temperature
+        self.format = format
 
     def get_prompt(self, question):
         """
@@ -56,7 +58,7 @@ class Agent:
             prompts.extend(history)
 
         prompts.append(make_prompt("user", prompt))
-        response = self.llm.ask(prompts, temperature=self.temperature)
+        response = self.llm.ask(prompts, temperature=self.temperature, format=self.format)
     
         self.chat_history.append(prompts[-1])
         self.chat_history.append(make_prompt("assistant", response))
@@ -68,35 +70,39 @@ class ObjectDetectorAgent():
     An ObjectDetectorAgent agent is used to detect objects in an image.
     Requires a multimodal LLM.
     """
-    def __init__(self, llm:object, temperature:float=0.3):
+    def __init__(self, vision_llm:object, text_llm:object, vision_temperature:float=0.3, text_temperature:float=0.3):
         """
         Initializes a new ObjectDetectorAgent object.
 
         Args:
-            llm (object): A multimodal LLM object that implements the ask() method.
-            temperature (float, optional): The temperature of the LLM. Defaults to 0.3.
+            vision_llm (object): A multimodal LLM object that implements the ask() method.
+            text_llm (object): An llm that is responsible for the final output
+            vision_temperature (float, optional): The temperature of the vision LLM. Defaults to 0.3.
+            text_temperature (float, optional): The temperature of the text LLM. Defaults to 0.3.
         """
-        self.llm = llm
+        self.vision_llm = vision_llm
+        self.text_llm = text_llm
         self.__system_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ObjectDetector"))
-        self.temperature = temperature
+        self.vision_temperature = vision_temperature
+        self.text_temperature = text_temperature
 
     def detect(self, images:list, objects:list=None, detection_criteria:str=None):
         """
         Detects objects in an image.
         If given a list of objects, only the objects in the list will be detected.
-        If a prompt is given instead, it will detect according to the prompt's instructions. 
+        If a detection_criteria is given instead, it will detect according to the criteria's instructions. 
         Args:
             images (list): The images to detect objects in. List of string paths or byte data.
             objects (list, optional): An optional list of objects to detect. Defaults to None.
             detection_criteria (str, optional): An opetional detection criteria to give.
         """
-        if llm_has_ask(self.llm) is False:
+        if llm_has_ask(self.vision_llm) is False or llm_has_ask(self.text_llm) is False:
             return None
         
         prompts = make_prompt("user", "Detect all objects in this image", images=images)
-        detected_objects = self.llm.ask([self.__system_prompt, prompts], temperature=self.temperature)
+        detected_objects = self.vision_llm.ask([self.__system_prompt, prompts], temperature=self.vision_temperature)
         prompts = self.__get_prompt(images, detected_objects, objects, detection_criteria)
-        response = self.llm.ask(prompts, format="json", temperature=0.1)
+        response = self.text_llm.ask(prompts, format="json", temperature=self.text_temperature)
 
         return response
         
@@ -111,15 +117,20 @@ class ObjectDetectorAgent():
         """
         prompt = ""
         sys_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ObjectFilterer"))
-        if detection_criteria is None:
-            if objects is None:
-                raise ValueError("You must provide either an object list or a detection_prompt.")
-            else:
-                prompt = "Image Objects: " + detected_objects + "\n\n My list of objects I'm interested in is: " + ", ".join(objects)
+
+        if objects is not None and detection_criteria is not None:
+            raise ValueError("You cannot provide both an object list and a detection_prompt.")
         else:
-            prompt = "Image Objects: " + detected_objects + "\n" + detection_criteria
-        prompt = make_prompt("user", prompt, images=images)
-        return [sys_prompt, prompt]
+            if detection_criteria is None:
+                if objects is None:
+                    raise ValueError("You must provide either an object list or a detection_prompt.")
+                else:
+                    prompt = "Image Description: " + detected_objects + "\n\nI'm INTERESTED in the following OBJECTS: " + ", ".join(objects)
+            else:
+                prompt = "Image Description: " + detected_objects + "\n\n I'm INTERESTED in the following: " + detection_criteria
+            prompt = prompt + "\n Only return the objects that fit my interests"
+            prompt = make_prompt("user", prompt)
+            return [sys_prompt, prompt]
 
 
 class PythonAgent():
@@ -197,6 +208,8 @@ class DataExtractor():
         """
         yaml_prompt = "DataExtractorJson" if reply_as_json else "DataExtractor"
         self.system_prompt = get_yaml_prompt("system_prompts.yaml", yaml_prompt)
+        if reply_as_json:
+            self.system_prompt = self.system_prompt + "\n Respond in JSON format"
         self.system_prompt = make_prompt("system", self.system_prompt.format(additional_instructions=additional_system_instructions))
         self.llm = llm
         self.chat_history = []
