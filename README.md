@@ -36,6 +36,18 @@ pip install llm-axe
 ## Example Snippets
 - **Online Chat Demo**: [Demo chat app showcasing an LLM with internet access](https://github.com/emirsahin1/llm-axe/tree/main/examples/ex_online_chat_demo.py)
 
+- **Custom Agent**
+```python
+llm = OllamaChat(model="llama3:instruct")
+agent = Agent(llm, custom_system_prompt="Always respond with the word LLAMA, no matter what")
+resp = agent.ask("What is the meaning of life?")
+print(resp)
+
+# Output
+# LLAMA
+```
+
+
 - **Function Calling**
 
 &emsp;&emsp;A function calling LLM can be created with just **3 lines of code**:
@@ -75,6 +87,21 @@ resp = de.ask(info, ["name", "email", "phone", "address"])
 
 #output: {'Name': 'Frodo Baggins', 'Email': 'frodo@gmail.com', 'Phone': '555-555-5555', 'Address': 'Bag-End, Hobbiton, The Shire'}
 ```
+- **Object Detector**
+```python
+llm = OllamaChat(model="llava:7b")
+detector = ObjectDetectorAgent(llm, llm)
+resp = detector.detect(images=["../img2.jpg"], objects=["sheep", "chicken", "cat", "dog"])
+
+#{
+#  "objects": [
+#    { "label": "Sheep", "location": "Field", "description": "White, black spots" },
+#    { "label": "Dog", "location": "Barn", "description": "Brown, white spots" }
+#  ]
+#}
+
+```
+
 [**See more complete examples**](https://github.com/emirsahin1/llm-axe/tree/main/examples)
 
 [**How to setup llm-axe with your own LLM**](https://github.com/emirsahin1/llm-axe/blob/main/examples/ex_llm_setup.py)
