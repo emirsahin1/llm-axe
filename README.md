@@ -1,5 +1,6 @@
+<img src="readme_imgs/axe.png" width="150" height="150"/>
 
-# llm-axe 🪓
+# llm-axe 
 
 <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/llm-axe"> <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/llm-axe">
 <img alt="Static Badge" src="https://img.shields.io/badge/clones-63/month-purple"> <img alt="GitHub forks" src="https://img.shields.io/github/forks/emirsahin1/llm-axe?style=flat">
