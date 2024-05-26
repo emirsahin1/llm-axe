@@ -1,10 +1,12 @@
+<img src="readme_imgs/axe.png" width="150" height="150"/>
 
-# llm-axe 🪓
+# llm-axe 
 
 <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/llm-axe"> <img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/llm-axe">
 <img alt="Static Badge" src="https://img.shields.io/badge/clones-63/month-purple"> <img alt="GitHub forks" src="https://img.shields.io/github/forks/emirsahin1/llm-axe?style=flat">
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Femirsahin1%2Fllm-axe&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/emirsahin1/llm-axe)
 
+[![Static Badge](https://img.shields.io/badge/llm--axe-gray?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FTq2E6cVg)](https://discord.gg/Tq2E6cVg)
 
 
 
@@ -24,6 +26,7 @@ llm-axe is a handy little axe for developing llm powered applications.
 
 It allows you to quickly implement complex interactions for local LLMs, such as function callers, online agents, pre-made generic agents, and more.
 
+[Have feedback/questions? Join the Discord](https://discord.gg/Tq2E6cVg)
 
 ## Installation
 
@@ -35,6 +38,18 @@ pip install llm-axe
     
 ## Example Snippets
 - **Online Chat Demo**: [Demo chat app showcasing an LLM with internet access](https://github.com/emirsahin1/llm-axe/tree/main/examples/ex_online_chat_demo.py)
+
+- **Custom Agent**
+```python
+llm = OllamaChat(model="llama3:instruct")
+agent = Agent(llm, custom_system_prompt="Always respond with the word LLAMA, no matter what")
+resp = agent.ask("What is the meaning of life?")
+print(resp)
+
+# Output
+# LLAMA
+```
+
 
 - **Function Calling**
 
@@ -75,6 +90,21 @@ resp = de.ask(info, ["name", "email", "phone", "address"])
 
 #output: {'Name': 'Frodo Baggins', 'Email': 'frodo@gmail.com', 'Phone': '555-555-5555', 'Address': 'Bag-End, Hobbiton, The Shire'}
 ```
+- **Object Detector**
+```python
+llm = OllamaChat(model="llava:7b")
+detector = ObjectDetectorAgent(llm, llm)
+resp = detector.detect(images=["../img2.jpg"], objects=["sheep", "chicken", "cat", "dog"])
+
+#{
+#  "objects": [
+#    { "label": "Sheep", "location": "Field", "description": "White, black spots" },
+#    { "label": "Dog", "location": "Barn", "description": "Brown, white spots" }
+#  ]
+#}
+
+```
+
 [**See more complete examples**](https://github.com/emirsahin1/llm-axe/tree/main/examples)
 
 [**How to setup llm-axe with your own LLM**](https://github.com/emirsahin1/llm-axe/blob/main/examples/ex_llm_setup.py)
