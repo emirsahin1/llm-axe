@@ -22,6 +22,13 @@ class AgentType(Enum):
 
 
 def llm_has_ask(llm):
+    """
+    Checks if the llm object has an ask function
+    Args:
+        llm (object): The object to check
+    Returns:
+        bool: True if the llm object has an ask function, False otherwise
+    """
     if not hasattr(llm, "ask"):
             warnings.warn("llm object must have an ask function! See OllamaChat class in models.py for an example.")
             return False
@@ -109,9 +116,9 @@ def generate_schema(functions):
 
 def safe_read_json(response):
     """
-    Reads the response as json and checks if it is a valid json.
+    Reads the string as json and checks if it is a valid json.
     Args:
-        response (str): The response from the LLM.
+        response (str): The string response from the LLM.
     """
     response_json = None
     try:
@@ -129,7 +136,7 @@ def clean_json_response(response):
     """
     Removes unnecessary characters from the json response.
     Args:
-        response (str): The response from the LLM.
+        response (str): The string response from the LLM.
     """
     brace_count = 0
     start = None
@@ -150,7 +157,7 @@ def clean_json_response(response):
 def internet_search(query):
     """
     Searches the internet for a query.
-    Returns top 10 results.
+    Returns top 5 results.
     Args:
         query (str): The query to search for.
     """
@@ -167,6 +174,9 @@ def read_website(url):
     Reads and returns the body of the website at the given url.
     Args:
         url (str): The url of the website to read.
+    Returns:
+        str: The body of the website.
+        None: If the request fails.
     """
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
     response = requests.get(url, headers=headers)

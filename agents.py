@@ -8,6 +8,7 @@ from llm_axe.core import AgentType, safe_read_json, generate_schema, get_yaml_pr
 class Agent:
     """
     Basic agent that can use premade or custom system prompts.
+    Custom system prompt will override any premade prompts.
     """
     def __init__(self, llm:object, agent_type:AgentType=None, additional_system_instructions:str="", custom_system_prompt:str=None, format:str="", temperature:float=0.8):
         """
@@ -43,11 +44,13 @@ class Agent:
         prompts = [self.system_prompt, user_prompt]
         return prompts
 
-    def ask(self, prompt, history:list=None):
+    def ask(self, prompt, images:list=None, history:list=None):
         """
-        Ask a question based on the given prompt.
+        Ask a question based on the given prompt or images.
+        Images require a multimodal LLM.
         Args:
-            prompt (str): The prompt to use for the question. Will only use system_prompt if prompt is None.
+            prompt (str): The prompt to use for the question.
+            images (list, optional): The images to include in the prompt. Each image must be a path to an image or base64 data. Defaults to None.
             history (list, optional): The history of the conversation. Defaults to None.
         """
         if llm_has_ask(self.llm) is False:
@@ -57,7 +60,7 @@ class Agent:
         if history is not None:
             prompts.extend(history)
 
-        prompts.append(make_prompt("user", prompt))
+        prompts.append(make_prompt("user", prompt, images))
         response = self.llm.ask(prompts, temperature=self.temperature, format=self.format)
     
         self.chat_history.append(prompts[-1])
@@ -94,7 +97,7 @@ class ObjectDetectorAgent():
         Args:
             images (list): The images to detect objects in. List of string paths or byte data.
             objects (list, optional): An optional list of objects to detect. Defaults to None.
-            detection_criteria (str, optional): An opetional detection criteria to give.
+            detection_criteria (str, optional): An optional detection criteria to give.
         """
         if llm_has_ask(self.vision_llm) is False or llm_has_ask(self.text_llm) is False:
             return None
@@ -106,14 +109,13 @@ class ObjectDetectorAgent():
 
         return response
         
-    def __get_prompt(self, images:list, detected_objects:list, objects:list=None, detection_criteria:str=None):
+    def __get_prompt(self, detected_objects:list, objects:list=None, detection_criteria:str=None):
         """
         Get the prompt for the given objects and detection_prompt.
         Args:
-            images (list): The images to detect objects in. List of string paths or byte data.
             detected_objects (list): The detected objects in the images.
             objects (list, optional): An optional list of objects to detect. Defaults to None.
-            detection_criteria (str, optional): An opetional detection criteria to give.
+            detection_criteria (str, optional): An optional detection criteria to give.
         """
         prompt = ""
         sys_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ObjectFilterer"))
@@ -135,7 +137,7 @@ class ObjectDetectorAgent():
 
 class PythonAgent():
     """
-    A PytonAgent agent is used to solve problems by writing Python code.
+    A PythonAgent agent is used to solve problems by writing Python code.
     It will provide code to execute and the imports used in the code.
     IMPORTANT!!: Code should ALWAYS be executed in a virtual or isolated environment.
     """
@@ -157,7 +159,7 @@ class PythonAgent():
         """
         Ask a question based on the given prompt.
         Args:
-            prompt (str): The prompt to use for the question. Will only use system_prompt if prompt is None.
+            prompt (str): The prompt to use for the question.
             history (list, optional): A list of previous chat messages in openai format. Defaults to None.
         Returns:
             dict: A dictionary containing the "code" and "imports" keys.
@@ -237,7 +239,8 @@ class DataExtractor():
         Ask a question based on the given content.
         Args:
             info (str): The content to extract information from.
-            data_points (list, optional): A string list of data points to extract. Defaults to None.
+            data_points (list, optional): A string list of data points to extract. 
+            Example: ["name", "age", "city"] Defaults to None.
         """
         prompts = self.get_prompt(info, data_points)
         resp = self.llm.ask(self.get_prompt(info, data_points), temperature=self.temperature)
@@ -248,7 +251,7 @@ class DataExtractor():
 
 class PdfReader():
     """
-    A PdfReader agent is used to answer questions based on information from given PDF files.
+    An Agent used to answer questions based on information from given PDF files.
     """
 
     def __init__(self, llm:object, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8):
@@ -298,7 +301,7 @@ class PdfReader():
         Generates the prompt for the LLM.
         args:
             question (str): The question to ask.
-            pdf_files (list): A list of PDF files to read. Each file should be a string representing the path to the PDF file. 
+            pdf_files (list): A list of PDF files to read. Each file should be a string path to the PDF file. 
         """
         pdf_text = ""
         for pdf_file in pdf_files:
@@ -331,10 +334,10 @@ class FunctionCaller():
         Initializes a new Function Caller.
 
         Args:
-            llm (object, optional): An LLM object. Must have an ask method. Defaults to None.
-            functions (list, optional): A list of functions. Defaults to None.
-            additional_system_instructions (str, optional): Instructions in addition to the system prompt. Defaults to "".
-            custom_system_prompt (str, optional): A custom system prompt. Will override the default. Defaults to None.
+            llm (object, optional): An LLM object. Must have an ask method.
+            functions (list, optional): A list of functions.
+            additional_system_instructions (str, optional): Instructions in addition to the default system prompt. Defaults to "".
+            custom_system_prompt (str, optional): A custom system prompt to override the default function picking prompt. Defaults to None.
             temperature (float, optional): The temperature of the LLM. Defaults to 0.8.
         """
         self.chat_history = []
@@ -436,14 +439,13 @@ class FunctionCaller():
 
 class WebsiteReaderAgent:
     """
-    An agent that can will read a website and answer questions based on it.
+    An agent that will read a specificwebsite and answer questions based on it.
     """
 
     def __init__(self, llm:object, additional_system_instructions:str="", custom_site_reader:callable=None, temperature:float=0.8):
         """
         Args:
             llm (object): An LLM object. Must have an ask method.
-            url (str): The url of the website to read.
             additional_system_instructions (str, optional): Instructions in addition to the system prompt. Defaults to "".
             custom_site_reader (function, optional): A custom online site reader function. The site reader function must take a URL and return a string representation of the site.
             temperature (float, optional): The temperature of the LLM. Defaults to 0.8.
