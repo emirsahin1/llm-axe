@@ -22,9 +22,11 @@
 
 
 
-llm-axe is a handy little axe for developing llm powered applications. 
 
-It allows you to quickly implement complex interactions for local LLMs, such as function callers, online agents, pre-made generic agents, and more.
+## Goal
+llm-axe is meant to be a flexible toolkit that provides simple abstractions for commonly used functions related to LLMs. It's not meant to intrude in your development workflow as other larger frameworks often do.
+
+It has functions for **automatic schema generation**, **pre-made agents** with self-tracking chat history and fully **customizable agents**.
 
 [Have feedback/questions? Join the Discord](https://discord.gg/Tq2E6cVg)
 
