@@ -201,7 +201,7 @@ def fetch_url_info(url):
     """
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers,timeout=5)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             title = soup.find('title').text if soup.find('title') else 'No title found'
