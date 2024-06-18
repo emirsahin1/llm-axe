@@ -514,13 +514,15 @@ class OnlineAgent:
         self.site_reader_function = custom_site_reader if custom_site_reader else read_website
         self.temperature = temperature
 
-    def search(self, prompt, history:list=None):
+    def search(self, prompt, history:list=None,use_selenium:bool=False, selenium_executable_path:str=None):
         """
         Searches the internet and answers the prompt based on the search results.
 
         Parameters:
             prompt (str): The prompt or question to answer.
             history (list, optional): A list of previous chat messages in openai format. Defaults to None.
+            use_selenium (bool, optional): Whether to use selenium to read the website when it requires javascript. Defaults to False.
+            selenium_executable_path (str, optional): The path to the selenium executable. Defaults to None.
 
         Returns:
             str: The response that answers the prompt.
@@ -560,7 +562,7 @@ class OnlineAgent:
             warnings.warn("LLM did not respond with valid url or json response.")
             return None
             
-        website_text = self.site_reader_function(url)
+        website_text = self.site_reader_function(url, use_selenium, selenium_executable_path)
         user_prompt = f'''
                     Please read the following information:
                     

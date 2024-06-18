@@ -119,7 +119,8 @@ setup(
             'ollama>=0.1.9',
             'pypdf>=4.2.0',
             'PyYAML>=6.0.1',
-            'requests>=2.31.0'
+            'requests>=2.31.0',
+            'selenium>=4.21.0'
         ], 
          package_data={
         '': ['*.yaml'],

@@ -9,6 +9,9 @@ from googlesearch import search
 import requests
 from bs4 import BeautifulSoup
 from pypdf import PdfReader as pypdfReader
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
 
 class AgentType(Enum):
     """
@@ -169,26 +172,61 @@ def internet_search(query):
 
     return urls_detailed
 
-def read_website(url):
+def read_website(url,use_selenium=False,selenium_executable_path=None):
     """
     Reads and returns the body of the website at the given url.
     Args:
         url (str): The url of the website to read.
+        use_selenium (bool, optional): Whether to use selenium to read the website when it requireas javascript. Defaults to False.
+        selenium_executable_path (str, optional): The path to the selenium executable. Defaults to None.
     Returns:
         str: The body of the website.
         None: If the request fails.
     """
+    print("read_website is called")
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        body = soup.body        
+        body = soup.body 
         body_text = body.get_text(strip=True)
-        return body_text        
+        noscript = soup.find("noscript")
+
+        if noscript and 'enable' in str(noscript.get_text) and use_selenium:
+            body_text = read_website_selenium(url,selenium_executable_path)
+
+        if body_text == "" and use_selenium:
+            body_text = read_website_selenium(url,selenium_executable_path)
+        return body_text
     else:
         warnings.warn("Failed to retrieve the website")
         return None
     
+
+def read_website_selenium(url,selenium_executable_path:str):
+    """
+    Reads and returns the body of the website at the given url using selenium.
+    Args:
+        url (str): The url of the website to read.
+        selenium_executable_path (str): The path to the selenium executable.
+    Returns:
+        str: The body of the website.
+    """
+    cService = webdriver.ChromeService(executable_path=selenium_executable_path)
+    options = webdriver.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--incognito')
+    options.add_argument('--headless')
+    options.add_argument("--enable-javascript")
+    options.add_argument('--remote-debugging-pipe')
+    driver = webdriver.Chrome(service = cService,options=options)
+    driver.get(url)
+    time.sleep(3)
+    body = driver.find_element(By.TAG_NAME, "body")
+    body_text = body.get_attribute('innerText')
+    driver.quit()
+    return body_text
+
 
 def fetch_url_info(url):
     """
