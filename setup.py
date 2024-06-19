@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.1.2' 
+VERSION = '1.1.5' 
 DESCRIPTION = 'A toolkit for quickly implementing llm powered functionalities.'
 LONG_DESCRIPTION = '''
 # llm-axe 🪓
@@ -119,11 +119,10 @@ setup(
             'ollama>=0.1.9',
             'pypdf>=4.2.0',
             'PyYAML>=6.0.1',
-            'requests>=2.31.0'
+            'requests>=2.31.0',
+            'selenium>=4.21.0'
         ], 
-         package_data={
-        '': ['*.yaml'],
-        },
+        package_data={'llm_axe': ['system_prompts.yaml']},
         
         keywords=['python', 'llm axe', 'llm toolkit', 'local llm', 'local llm internet', 'function caller llm', "ollama"],
         classifiers= [
