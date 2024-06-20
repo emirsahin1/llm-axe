@@ -574,7 +574,7 @@ class OnlineAgent:
                     '''
         
         final_responder = Agent(llm=self.llm, agent_type=AgentType.GENERIC_RESPONDER)
-        response = final_responder.ask(user_prompt, history)
+        response = final_responder.ask(user_prompt, history=history)
 
         self.chat_history.append(make_prompt("user", user_prompt))
         self.chat_history.append(make_prompt("assistant", response))
