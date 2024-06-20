@@ -6,7 +6,7 @@
 <img alt="Static Badge" src="https://img.shields.io/badge/clones-63/month-purple"> <img alt="GitHub forks" src="https://img.shields.io/github/forks/emirsahin1/llm-axe?style=flat">
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Femirsahin1%2Fllm-axe&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://github.com/emirsahin1/llm-axe)
 
-[![Static Badge](https://img.shields.io/badge/llm--axe-gray?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FTq2E6cVg)](https://discord.gg/Tq2E6cVg)
+[![Static Badge](https://img.shields.io/badge/llm--axe-gray?logo=discord&link=https%3A%2F%2Fdiscord.gg%2FTq2E6cVg)](https://discord.gg/4DyMcRbK4G)
 
 
 
@@ -28,7 +28,7 @@ llm-axe is meant to be a flexible toolkit that provides simple abstractions for 
 
 It has functions for **automatic schema generation**, **pre-made agents** with self-tracking chat history and fully **customizable agents**.
 
-[Have feedback/questions? Join the Discord](https://discord.gg/Tq2E6cVg)
+[Have feedback/questions? Join the Discord](https://discord.gg/4DyMcRbK4G)
 
 ## Installation
 
