@@ -202,14 +202,26 @@ def selenium_reader(url):
         str: The body of the website.
         None: If the request fails.
     """
-    selenium_executable_path = os.path.join(os.getcwd(), "chromedriver" + (".exe" if os.name == "nt" else ""))
-    cService = webdriver.ChromeService(executable_path=selenium_executable_path)
     options = webdriver.ChromeOptions()
-    options.add_argument('--ignore-certificate-errors')
     options.add_argument('--incognito')
     options.add_argument('--headless')
     options.add_argument("--enable-javascript")
     options.add_argument('--remote-debugging-pipe')
+    
+    
+    prefs = {
+        "download.open_pdf_in_system_reader": False,
+        "download.prompt_for_download": True,
+        "plugins.always_open_pdf_externally": False,
+        "download_restrictions": 3,
+        "download.default_directory": 'NUL' if os.name == "nt" else '/dev/null',
+    }
+    options.add_experimental_option(
+        "prefs", prefs
+    )
+
+    selenium_executable_path = os.path.join(os.getcwd(), "chromedriver" + (".exe" if os.name == "nt" else ""))
+    cService = webdriver.ChromeService(executable_path=selenium_executable_path)
     driver = webdriver.Chrome(options=options, service=cService)
     driver.get(url)
     time.sleep(3)
