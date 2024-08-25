@@ -12,6 +12,10 @@ from pypdf import PdfReader as pypdfReader
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import re
+
 
 class AgentType(Enum):
     """
@@ -278,5 +282,81 @@ def fetch_url_info(url):
     except Exception as e:
         return None
 
+def find_most_relevant(text_embedding_pairs: list, prompt_embedding: list, top_k: int = 5):
+    """
+    Finds the most relevant embeddings in the embeddings list in relation to the prompt_embedding.
+    Args:
+        text_embedding_pairs (list): A list of embeddings to search through.
+        prompt_embedding (list): The embedding of the prompt.
+        top_k (int, optional): The number of texts to return, in descending order. Defaults to 5.
+    Returns:
+        list: A list of the most relevant text.
+    """
+    texts, embeddings = zip(*text_embedding_pairs)
+    distances = cosine_similarity([prompt_embedding], embeddings)[0]
+    top_similar = np.argsort(distances)[-top_k:][::-1]
+    return [texts[i] for i in top_similar]
 
-# TODO:: Add custom html reader option
+def split_into_sentences(text: str):
+    """
+    Split the text into sentences.
+
+    If the text contains substrings "<prd>" or "<stop>", they would lead 
+    to incorrect splitting because they are used as markers for splitting.
+
+    Args:
+        text (str): The text to split into sentences.
+   
+    Returns: 
+        list: A list of sentences
+    """
+    alphabets= "([A-Za-z])"
+    prefixes = "(Mr|St|Mrs|Ms|Dr)[.]"
+    suffixes = "(Inc|Ltd|Jr|Sr|Co)"
+    starters = "(Mr|Mrs|Ms|Dr|Prof|Capt|Cpt|Lt|He\s|She\s|It\s|They\s|Their\s|Our\s|We\s|But\s|However\s|That\s|This\s|Wherever)"
+    acronyms = "([A-Z][.][A-Z][.](?:[A-Z][.])?)"
+    websites = "[.](com|net|org|io|gov|edu|me)"
+    digits = "([0-9])"
+    multiple_dots = r'\.{2,}'
+    text = " " + text + "  "
+    text = text.replace("\n"," ")
+    text = re.sub(prefixes,"\\1<prd>",text)
+    text = re.sub(websites,"<prd>\\1",text)
+    text = re.sub(digits + "[.]" + digits,"\\1<prd>\\2",text)
+    text = re.sub(multiple_dots, lambda match: "<prd>" * len(match.group(0)) + "<stop>", text)
+    if "Ph.D" in text: text = text.replace("Ph.D.","Ph<prd>D<prd>")
+    text = re.sub("\s" + alphabets + "[.] "," \\1<prd> ",text)
+    text = re.sub(acronyms+" "+starters,"\\1<stop> \\2",text)
+    text = re.sub(alphabets + "[.]" + alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>\\3<prd>",text)
+    text = re.sub(alphabets + "[.]" + alphabets + "[.]","\\1<prd>\\2<prd>",text)
+    text = re.sub(" "+suffixes+"[.] "+starters," \\1<stop> \\2",text)
+    text = re.sub(" "+suffixes+"[.]"," \\1<prd>",text)
+    text = re.sub(" " + alphabets + "[.]"," \\1<prd>",text)
+    if "”" in text: text = text.replace(".”","”.")
+    if "\"" in text: text = text.replace(".\"","\".")
+    if "!" in text: text = text.replace("!\"","\"!")
+    if "?" in text: text = text.replace("?\"","\"?")
+    text = text.replace(".",".<stop>")
+    text = text.replace("?","?<stop>")
+    text = text.replace("!","!<stop>")
+    text = text.replace("<prd>",".")
+    sentences = text.split("<stop>")
+    sentences = [s.strip() for s in sentences]
+    if sentences and not sentences[-1]: sentences = sentences[:-1]
+    return sentences
+
+
+def split_into_chunks(text: str, sentences_per_chunk: int):
+    """
+    Split the text into chunks, limited by the number of sentences per chunk.
+
+    Args:
+        text (str): The text to split into chunks.
+        sentences_per_chunk (int): The maximum number of sentences per chunk.
+
+    Returns:
+        list: A list of chunks.
+    """
+    sentences = split_into_sentences(text)
+    chunks = [" ".join(sentences[i:i+sentences_per_chunk]) for i in range(0, len(sentences), sentences_per_chunk)]
+    return chunks

@@ -5,3 +5,5 @@ ollama==0.1.9
 pypdf==4.2.0
 PyYAML==6.0.1
 Requests==2.31.0
+numpy==1.25.2
+scikit-learn==1.4.0

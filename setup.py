@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '1.1.5' 
+VERSION = '1.1.7' 
 DESCRIPTION = 'A toolkit for quickly implementing llm powered functionalities.'
 LONG_DESCRIPTION = '''
 # llm-axe 🪓
@@ -120,7 +120,9 @@ setup(
             'pypdf>=4.2.0',
             'PyYAML>=6.0.1',
             'requests>=2.31.0',
-            'selenium>=4.21.0'
+            'selenium>=4.21.0',
+            'numpy>=1.25.2',
+            'scikit-learn>=1.4.0',
         ], 
         package_data={'llm_axe': ['system_prompts.yaml']},
         
