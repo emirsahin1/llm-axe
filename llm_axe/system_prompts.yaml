@@ -154,9 +154,6 @@ DocumentReader:
 
         {additional_instructions}
 
-        Documents:
-
-        {documents}
 
 DataExtractor:
     prompt: |

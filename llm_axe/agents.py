@@ -104,7 +104,7 @@ class ObjectDetectorAgent():
         
         prompts = make_prompt("user", "Detect all objects in this image", images=images)
         detected_objects = self.vision_llm.ask([self.__system_prompt, prompts], temperature=self.vision_temperature)
-        prompts = self.__get_prompt(images, detected_objects, objects, detection_criteria)
+        prompts = self.__get_prompt(detected_objects, objects, detection_criteria)
         response = self.text_llm.ask(prompts, format="json", temperature=self.text_temperature)
 
         return response
@@ -313,9 +313,9 @@ class PdfReader():
         else:
             self.system_prompt = self.custom_system_prompt
 
-        self.system_prompt = make_prompt("system", self.system_prompt.format(documents=pdf_text, additional_instructions=self.additional_instructions))
+        self.system_prompt = make_prompt("system", self.system_prompt.format(additional_instructions=self.additional_instructions))
         
-        user_prompt = make_prompt("user", question)
+        user_prompt = make_prompt("user", pdf_text + "\n" + question)
         prompts = [self.system_prompt, user_prompt]
 
         return prompts
