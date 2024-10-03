@@ -30,6 +30,8 @@ It has functions for **automatic schema generation**, **pre-made agents** with s
 
 [Have feedback/questions? Join the Discord](https://discord.gg/4DyMcRbK4G)
 
+[Read the Development Documentation](https://github.com/emirsahin1/llm-axe/wiki)
+
 ## Installation
 
 
@@ -39,19 +41,20 @@ pip install llm-axe
 ```
     
 ## Example Snippets
-- **Online Chat Demo**: [Demo chat app showcasing an LLM with internet access](https://github.com/emirsahin1/llm-axe/tree/main/examples/ex_online_chat_demo.py)
-
-- **Custom Agent**
+- **Easily Work With Non-Persistent Embeddings**:
 ```python
-llm = OllamaChat(model="llama3:instruct")
-agent = Agent(llm, custom_system_prompt="Always respond with the word LLAMA, no matter what")
-resp = agent.ask("What is the meaning of life?")
-print(resp)
+from llm_axe import read_pdf, find_most_relevant, split_into_chunks
+text = read_pdf("./super_long_text.pdf")
+sentences = split_into_chunks(text, 3)
+pairs = []
+for chunk in sentences:
+    embeddings = client.embeddings(model='nomic-embed-text', prompt=chunk)["embedding"]
+    pairs.append((chunk, embeddings))
 
-# Output
-# LLAMA
-```
-
+prompt = "What do the Hobbit traditions say about second breakfast?"
+prompt_embedding = client.embeddings(model='nomic-embed-text', prompt=prompt)["embedding"]
+relevant_texts = find_most_relevant(pairs, prompt_embedding, top_k=4)
+```  
 
 - **Function Calling**
 
@@ -65,6 +68,18 @@ llm = OllamaChat(model="llama3:instruct")
 fc = FunctionCaller(llm, [get_time, get_date, get_location, add, multiply])
 result = fc.get_function(prompt)
 ```
+
+- **Custom Agent**
+```python
+llm = OllamaChat(model="llama3:instruct")
+agent = Agent(llm, custom_system_prompt="Always respond with the word LLAMA, no matter what")
+resp = agent.ask("What is the meaning of life?")
+print(resp)
+
+# Output
+# LLAMA
+```
+
 - **Online Agent**
 ```python
 prompt = "Tell me a bit about this website:  https://toscrape.com/?"
