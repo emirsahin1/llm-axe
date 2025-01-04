@@ -10,7 +10,7 @@ class Agent:
     Basic agent that can use premade or custom system prompts.
     Custom system prompt will override any premade prompts.
     """
-    def __init__(self, llm:object, agent_type:AgentType=None, additional_system_instructions:str="", custom_system_prompt:str=None, format:str="", temperature:float=0.8):
+    def __init__(self, llm:object, agent_type:AgentType=None, additional_system_instructions:str="", custom_system_prompt:str=None, format:str="", temperature:float=0.8, **llm_options):
         """
         Args:
             llm (object): An LLM object with an ask function.
@@ -33,6 +33,7 @@ class Agent:
         self.system_prompt = make_prompt("system", self.system_prompt.format(additional_instructions=additional_system_instructions))
         self.temperature = temperature
         self.format = format
+        self.llm_options = llm_options
 
     def get_prompt(self, question):
         """
@@ -61,7 +62,7 @@ class Agent:
             prompts.extend(history)
 
         prompts.append(make_prompt("user", prompt, images))
-        response = self.llm.ask(prompts, temperature=self.temperature, format=self.format)
+        response = self.llm.ask(prompts, temperature=self.temperature, format=self.format, **self.llm_options)
     
         self.chat_history.append(prompts[-1])
         self.chat_history.append(make_prompt("assistant", response))
@@ -73,7 +74,7 @@ class ObjectDetectorAgent():
     An ObjectDetectorAgent agent is used to detect objects in an image.
     Requires a multimodal LLM.
     """
-    def __init__(self, vision_llm:object, text_llm:object, vision_temperature:float=0.3, text_temperature:float=0.3):
+    def __init__(self, vision_llm:object, text_llm:object, vision_temperature:float=0.3, text_temperature:float=0.3, **llm_options):
         """
         Initializes a new ObjectDetectorAgent object.
 
@@ -88,6 +89,7 @@ class ObjectDetectorAgent():
         self.__system_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ObjectDetector"))
         self.vision_temperature = vision_temperature
         self.text_temperature = text_temperature
+        self.llm_options = llm_options
 
     def detect(self, images:list, objects:list=None, detection_criteria:str=None):
         """
@@ -103,9 +105,9 @@ class ObjectDetectorAgent():
             return None
         
         prompts = make_prompt("user", "Detect all objects in this image", images=images)
-        detected_objects = self.vision_llm.ask([self.__system_prompt, prompts], temperature=self.vision_temperature)
+        detected_objects = self.vision_llm.ask([self.__system_prompt, prompts], temperature=self.vision_temperature, **self.llm_options)
         prompts = self.__get_prompt(detected_objects, objects, detection_criteria)
-        response = self.text_llm.ask(prompts, format="json", temperature=self.text_temperature)
+        response = self.text_llm.ask(prompts, format="json", temperature=self.text_temperature, **self.llm_options)
 
         return response
         
@@ -141,7 +143,7 @@ class PythonAgent():
     It will provide code to execute and the imports used in the code.
     IMPORTANT!!: Code should ALWAYS be executed in a virtual or isolated environment.
     """
-    def __init__(self, llm:object, temperature:float=0.8):
+    def __init__(self, llm:object, temperature:float=0.8, **llm_options):
         """
         Initializes a new PythonAgent object.
 
@@ -154,6 +156,7 @@ class PythonAgent():
         self.system_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "PythonAgent"))
         self.library_extractor_prompt = make_prompt("system", get_yaml_prompt("system_prompts.yaml", "ImportExtractor"))
         self.temperature = temperature
+        self.llm_options = llm_options
 
     def ask(self, prompt, history:list=None):
         """
@@ -177,7 +180,7 @@ class PythonAgent():
         user_prompt = make_prompt("user", prompt)
         coder_prompts.append(user_prompt)
             
-        code_response = self.llm.ask(coder_prompts, temperature=self.temperature)
+        code_response = self.llm.ask(coder_prompts, temperature=self.temperature, **self.llm_options)
         self.chat_history.append(user_prompt)
         self.chat_history.append(make_prompt("assistant", code_response))
 
@@ -188,7 +191,7 @@ class PythonAgent():
             code = code.replace("Python", "")
         
         # Extract imports
-        imports = self.llm.ask([self.library_extractor_prompt, make_prompt("user", code_response)], format="json", temperature=self.temperature)
+        imports = self.llm.ask([self.library_extractor_prompt, make_prompt("user", code_response)], format="json", temperature=self.temperature, **self.llm_options)
         self.chat_history.append(make_prompt("assistant", imports))
         imports = safe_read_json(imports)
 
@@ -199,7 +202,7 @@ class DataExtractor():
     """
     A DataExtractor agent is used to extract information from given content.
     """
-    def __init__(self, llm:object, reply_as_json:bool=False, additional_system_instructions:str="", temperature:float=0.8):
+    def __init__(self, llm:object, reply_as_json:bool=False, additional_system_instructions:str="", temperature:float=0.8, **llm_options):
         """
         Initializes a new DataExtractor.
         Args:
@@ -216,6 +219,7 @@ class DataExtractor():
         self.llm = llm
         self.chat_history = []
         self.temperature = temperature
+        self.llm_options = llm_options
 
     def get_prompt(self, info:str, data_points:list=[]):
         """
@@ -243,7 +247,7 @@ class DataExtractor():
             Example: ["name", "age", "city"] Defaults to None.
         """
         prompts = self.get_prompt(info, data_points)
-        resp = self.llm.ask(self.get_prompt(info, data_points), temperature=self.temperature)
+        resp = self.llm.ask(self.get_prompt(info, data_points), temperature=self.temperature, **self.llm_options)
         self.chat_history.append(prompts[1])
         self.chat_history.append(make_prompt("assistant", resp))
         return resp
@@ -254,7 +258,7 @@ class PdfReader():
     An Agent used to answer questions based on information from given PDF files.
     """
 
-    def __init__(self, llm:object, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8):
+    def __init__(self, llm:object, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8, **llm_options):
         """
         Initializes a new PdfReader.
         Args:
@@ -269,6 +273,7 @@ class PdfReader():
         self.system_prompt = get_yaml_prompt("system_prompts.yaml", "DocumentReader")
         self.custom_system_prompt = custom_system_prompt
         self.temperature = temperature
+        self.llm_options = llm_options
 
 
     def ask(self, question:str, pdf_files:list, history:list=None):
@@ -290,7 +295,7 @@ class PdfReader():
             prompts.extend(history)
 
         prompts.append(question_prompts[1])
-        response = self.llm.ask(prompts, temperature=self.temperature)
+        response = self.llm.ask(prompts, temperature=self.temperature, **self.llm_options)
 
         self.chat_history.append(question_prompts[1]) # dont include the system prompt
         self.chat_history.append(make_prompt("assistant", response))
@@ -315,7 +320,7 @@ class PdfReader():
 
         self.system_prompt = make_prompt("system", self.system_prompt.format(additional_instructions=self.additional_instructions))
         
-        user_prompt = make_prompt("user", pdf_text + "\n" + question)
+        user_prompt = make_prompt("user", pdf_text + "\nUser's question: " + question)
         prompts = [self.system_prompt, user_prompt]
 
         return prompts
@@ -329,7 +334,7 @@ class FunctionCaller():
     have type annotations doc string descriptions.
     """
 
-    def __init__(self, llm:object, functions:list, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8):            
+    def __init__(self, llm:object, functions:list, additional_system_instructions:str="", custom_system_prompt:str=None, temperature:float=0.8, **llm_options):            
         """
         Initializes a new Function Caller.
 
@@ -346,6 +351,7 @@ class FunctionCaller():
         self.additional_instructions = additional_system_instructions
         self.schema = generate_schema(functions)
         self.temperature = temperature
+        self.llm_options = llm_options
 
         if custom_system_prompt is None:
             self.system_prompt = get_yaml_prompt("system_prompts.yaml", "FunctionCaller")
@@ -388,7 +394,7 @@ class FunctionCaller():
             prompts.extend(history)
         prompts.append(question_prompts[1])            
 
-        response = self.llm.ask(prompts, format="json", temperature=self.temperature)
+        response = self.llm.ask(prompts, format="json", temperature=self.temperature, **self.llm_options)
         response_json = safe_read_json(response)
 
         self.chat_history.append(question_prompts[1])
@@ -442,7 +448,7 @@ class WebsiteReaderAgent:
     An agent that will read a specificwebsite and answer questions based on it.
     """
 
-    def __init__(self, llm:object, additional_system_instructions:str="", custom_site_reader:callable=None, temperature:float=0.8):
+    def __init__(self, llm:object, additional_system_instructions:str="", custom_site_reader:callable=None, temperature:float=0.8, **llm_options):
         """
         Args:
             llm (object): An LLM object. Must have an ask method.
@@ -456,6 +462,7 @@ class WebsiteReaderAgent:
         self.additional_system_instructions = additional_system_instructions
         self.read_function = custom_site_reader if custom_site_reader else read_website
         self.temperature = temperature
+        self.llm_options = llm_options
 
     def ask(self, question:str, url:str, history:list=None):
         """
@@ -485,7 +492,7 @@ class WebsiteReaderAgent:
         user_prompt = make_prompt("user", question)
         prompts.append(user_prompt)
         
-        response = self.llm.ask(prompts, temperature=self.temperature)
+        response = self.llm.ask(prompts, temperature=self.temperature, **self.llm_options)
         self.chat_history.append(user_prompt)
         self.chat_history.append(make_prompt("assistant", response))
         return response
@@ -497,7 +504,7 @@ class OnlineAgent:
     It will use the internet to try and best answer the user prompt.
     """
 
-    def __init__(self, llm:object, additional_system_instructions:str="", custom_searcher:callable=None, custom_site_reader:callable=None, temperature:float=0.8):
+    def __init__(self, llm:object, additional_system_instructions:str="", custom_searcher:callable=None, custom_site_reader:callable=None, temperature:float=0.8, **llm_options):
         """
         Args:
             llm (object): An LLM object. Must have an ask method.
@@ -513,6 +520,7 @@ class OnlineAgent:
         self.search_function = custom_searcher if custom_searcher else internet_search
         self.site_reader_function = custom_site_reader if custom_site_reader else read_website
         self.temperature = temperature
+        self.llm_options = llm_options
 
     def search(self, prompt, history:list=None):
         """
@@ -546,7 +554,7 @@ class OnlineAgent:
         url_picker_prompt = make_prompt("user", url_picker_prompt.format(question=prompt, urls=search_results))
         url_picker_prompts.append(url_picker_prompt)
 
-        resp = self.llm.ask(url_picker_prompts, format="json", temperature=self.temperature)
+        resp = self.llm.ask(url_picker_prompts, format="json", temperature=self.temperature, **self.llm_options)
         resp_json = safe_read_json(resp)
 
         self.chat_history.append(url_picker_prompt)
@@ -573,7 +581,7 @@ class OnlineAgent:
                     Start your answer with "Based on information from the internet, "
                     '''
         
-        final_responder = Agent(llm=self.llm, agent_type=AgentType.GENERIC_RESPONDER)
+        final_responder = Agent(llm=self.llm, agent_type=AgentType.GENERIC_RESPONDER, temperature=self.temperature, **self.llm_options)
         response = final_responder.ask(user_prompt, history=history)
 
         self.chat_history.append(make_prompt("user", user_prompt))
@@ -584,7 +592,7 @@ class OnlineAgent:
     def get_search_query(self, question):
         user_prompt = make_prompt("user", question)
         prompts = [self.system_prompt, user_prompt]
-        response = self.llm.ask(prompts, format="json", temperature=self.temperature)
+        response = self.llm.ask(prompts, format="json", temperature=self.temperature, **self.llm_options)
         response_json = safe_read_json(response)
         self.chat_history.append(prompts[1])
         self.chat_history.append(make_prompt("assistant", response))

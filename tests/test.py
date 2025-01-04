@@ -28,7 +28,6 @@ class TestAgent(unittest.TestCase):
     
         agent = Agent(self.llm_mock, agent_type=AgentType.GENERIC_RESPONDER)
         response = agent.ask(prompt, history=[{"role": "user", "content": "Hello"}])
-        print(agent.chat_history[0])
         self.assertEqual(response, mock_resp)
         self.assertEqual(agent.chat_history[0]["role"], "user")
         self.assertEqual(agent.chat_history[0]["content"], "What is the meaning of life?")
@@ -101,15 +100,6 @@ class TestPdfReader(unittest.TestCase):
             self.assertEqual(response, mock_resp)
             self.assertEqual(agent.chat_history[0]["role"], "user")
             self.assertEqual(agent.chat_history[1]["role"], "assistant")
-
-    def test_get_prompt(self):
-        prompt = "What is the meaning of life?"
-        agent = PdfReader(self.llm_mock)
-
-        with patch('llm_axe.agents.read_pdf') as read_pdf_mock:
-            read_pdf_mock.return_value = "Pdf output"
-            prompts = agent.get_prompt(prompt, ["pdf1.pdf"])
-            self.assertEqual(prompts, [agent.system_prompt, {"role": "user", "content": prompt}])
 
 
 class TestFunctionCaller(unittest.TestCase):

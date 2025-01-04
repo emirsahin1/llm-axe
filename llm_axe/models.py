@@ -11,12 +11,12 @@ class OllamaChat():
         self._model = model
         self._ollama = Client(host)
 
-    def ask(self, prompts:list, format:str="", temperature:float=0.8):
+    def ask(self, prompts:list, format:str="", temperature:float=0.8, stream:bool=False, **options):
         """
         Args:
             prompts (list): A list of prompts to ask.
             format (str, optional): The format of the response. Use "json" for json. Defaults to "".
             temperature (float, optional): The temperature of the LLM. Defaults to 0.8.
         """
-        return self._ollama.chat(model=self._model, messages=prompts, format=format, options={"temperature": temperature})["message"]["content"]        
+        return self._ollama.chat(model=self._model, messages=prompts, format=format, options={"temperature": temperature, **options}, stream=stream)["message"]["content"]        
 
