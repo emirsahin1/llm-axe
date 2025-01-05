@@ -41,6 +41,16 @@ pip install llm-axe
 ```
     
 ## Example Snippets
+- **Streaming Support**:
+```python
+llm = OllamaChat(model="llama3.1")
+ag = Agent(llm, custom_system_prompt="", stream=True)
+res = ag.ask("Explain who you are in 20 paragraphs")
+
+for chunk in res:
+    print(chunk, end="", flush=True)
+```
+
 - **Easily Work With Non-Persistent Embeddings**:
 ```python
 from llm_axe import read_pdf, find_most_relevant, split_into_chunks
