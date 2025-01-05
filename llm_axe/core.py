@@ -27,6 +27,20 @@ class AgentType(Enum):
     GENERIC_RESPONDER = "GenericResponder"
     VALIDATOR = "Validator"
 
+def stream_and_record(stream, chat_history):
+    """Streams the response from the LLM and records the chat history."""
+    chunks = []
+    for chunk in stream:
+        if type(chunk) is dict and "message" in chunk:
+            content = chunk["message"]["content"]
+        else:
+            content = chunk
+        chunks.append(content)
+        yield content
+    if chat_history is not None:
+        complete_resp = "".join(chunks)
+        chat_history.append(make_prompt("assistant", complete_resp))
+
 
 def llm_has_ask(llm):
     """
